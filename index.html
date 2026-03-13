@@ -129,7 +129,27 @@ color:black
 
 }
 
-</style></head><body><div class="card"><h2>Employee Manager</h2><select id="employeeSelect">
+</style></head><body>
+    <script>
+const allowedKeys = [
+"HEMANT03",
+"ABHIRAJ29",
+"TEAM789"
+];
+
+let savedKey = localStorage.getItem("accessKey");
+
+if(!allowedKeys.includes(savedKey)){
+   let key = prompt("Enter Access Key");
+
+   if(allowedKeys.includes(key)){
+      localStorage.setItem("accessKey", key);
+   }else{
+      document.body.innerHTML = "<h2 style='text-align:center;margin-top:100px'>Access Denied</h2>";
+   }
+}
+</script>
+    <div class="card"><h2>Employee Manager</h2><select id="employeeSelect">
 <option value="">Select Employee</option>
 </select><input id="newEmployee" placeholder="New Employee Name"><button onclick="addEmployee()">Add Employee</button>
 
