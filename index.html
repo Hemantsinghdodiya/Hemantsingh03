@@ -1,0 +1,399 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PW Freelancer KRA Salary Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><style>
+
+body{
+background:#f4f6fb;
+font-family:segoe UI,Arial;
+color:#333;
+padding:20px;
+position:relative;
+}
+body::before{
+    content:"";
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:url("Pw-logo.jpg")
+    no-repeat center;
+    background-size:500px;
+    opacity:0.15;
+    z-index:-1;
+}
+
+.card{
+background:#ffffff;
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+border:none;
+ box-shadow:0 4px 15px rgba(0,0,0,0,.08)}
+
+h2,h3{
+margin:0 0 10px
+}
+
+input,select,button{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:6px;
+border:1px solid #ccc;
+font-size:15px
+}
+
+input,select{
+background:#f9fafc;
+color:#333;
+border:1px solid #ddd;
+transition:0.2s
+}
+input:focus,select:focus{
+    border-color:#2563ed;
+    outline:none;
+}
+
+button{
+background:#2563eb;
+color:white;
+font-weight:600;
+cursor:pointer;
+border :none;
+transition :0.3s
+}
+button :hover{
+    background :#1d4ed8;
+    transform :scale(0.02)
+}
+
+.small{
+opacity:.8;
+font-size:14px
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:12px
+}
+
+th,td{
+border:1px solid #ccc;
+padding:8px;
+text-align:center
+}
+
+th{
+background:#2563eb;
+color:white;
+}
+td{background:#fafafa}
+
+
+.green{color:#0a8f3c}
+.red{color:#c40000}
+
+.actionBtn{
+background:#64748b;
+color:white;
+font-size:13px;
+padding:6px 10px;
+border:none;
+border-radius:5px}
+.actionBtn:hover{
+    background:#475569
+}
+
+.tools{
+display:flex;
+gap:10px;
+margin-bottom:10px
+}
+
+/* PRINT CLEAN */
+
+@media print{
+
+button,input,select{
+display:none
+}
+
+body{
+background:white;
+color:black
+}
+
+}
+
+</style></head><body><div class="card"><h2>Employee Manager</h2><select id="employeeSelect">
+<option value="">Select Employee</option>
+</select><input id="newEmployee" placeholder="New Employee Name"><button onclick="addEmployee()">Add Employee</button>
+
+</div><div class="card"><h2>Daily KRA Entry</h2><input type="date" id="entryDate"><input type="number" id="talktime" placeholder="Talktime (seconds)"><input type="number" id="ecc" placeholder="ECC Calls"><input type="number" id="sales" placeholder="Sales Amount ₹"><button onclick="previewKRA()">Calculate KRA</button>
+
+<button onclick="addDay()">Add Today</button>
+
+<div id="output" class="small"></div></div><div class="card"><h2>Monthly Dashboard</h2><div class="tools">
+<button onclick="printReport()">Print Report</button>
+</div><table><thead><tr><th>Date</th>
+<th>KRA %</th>
+<th>Pay ₹</th>
+<th>Incentive ₹</th>
+<th>Total ₹</th>
+<th>Action</th></tr></thead><tbody id="table"></tbody></table><h3>Total Salary: ₹<span id="gross">0</span></h3><h3 class="red">TDS: ₹<span id="tds">0</span></h3><h2 class="green">In-Hand: ₹<span id="net">0</span></h2></div><script>
+
+let employees = JSON.parse(localStorage.getItem("pwEmployees")) || {}
+
+let currentEmployee = localStorage.getItem("pwCurrent") || ""
+
+let tempCalc = null
+
+function saveData(){
+
+localStorage.setItem("pwEmployees", JSON.stringify(employees))
+
+localStorage.setItem("pwCurrent", currentEmployee)
+
+}
+
+function loadEmployees(){
+
+for(let name in employees){
+
+employeeSelect.innerHTML += `<option value="${name}">${name}</option>`
+
+}
+
+if(currentEmployee){
+
+employeeSelect.value = currentEmployee
+
+render()
+
+}
+
+}
+
+loadEmployees()
+
+function calcPay(kra){
+
+kra = Number(kra)
+
+if(kra >= 150) return 1100
+if(kra >= 135) return 1000
+if(kra >= 120) return 900
+if(kra >= 100) return 750
+if(kra >= 80) return 500
+if(kra >= 60) return 300
+
+return 0
+
+}
+
+function addEmployee(){
+
+let name = newEmployee.value.trim()
+
+if(!name) return alert("Enter employee name")
+
+if(!employees[name]){
+
+employees[name] = { days:[], total:0 }
+
+employeeSelect.innerHTML += `<option value="${name}">${name}</option>`
+
+}
+
+employeeSelect.value = name
+
+currentEmployee = name
+
+newEmployee.value=""
+
+saveData()
+
+render()
+
+}
+
+employeeSelect.addEventListener("change",()=>{
+
+currentEmployee = employeeSelect.value
+
+saveData()
+
+render()
+
+})
+
+function previewKRA(){
+
+if(!entryDate.value) return alert("Select date first")
+
+let talk = Number(talktime.value)
+
+let eccVal = Number(ecc.value)
+
+let salesVal = Number(sales.value)
+
+let kra = (eccVal + talk * 0.003611).toFixed(2)
+
+let pay = calcPay(kra)
+
+let incentive = Math.round(salesVal * 2.5 / 100)
+
+let total = pay + incentive
+
+tempCalc = { kra, pay, incentive, total }
+
+output.innerHTML = `
+Preview<br>
+Date: ${new Date(entryDate.value).toLocaleDateString("en-IN")}<br>
+KRA: <b>${kra}%</b><br>
+Total: ₹${total}`
+
+}
+
+function addDay(){
+
+if(!currentEmployee) return alert("Select employee")
+
+if(!tempCalc) return alert("Calculate first")
+
+let today = new Date(entryDate.value).toLocaleDateString("en-IN")
+
+employees[currentEmployee].days.push({
+
+date: today,
+
+...tempCalc
+
+})
+
+employees[currentEmployee].total += tempCalc.total
+
+tempCalc=null
+
+entryDate.value=""
+
+talktime.value=""
+
+ecc.value=""
+
+sales.value=""
+
+output.innerHTML=""
+
+saveData()
+
+render()
+
+}
+
+function render(){
+
+if(!currentEmployee){
+
+table.innerHTML=""
+
+gross.innerText=tds.innerText=net.innerText=0
+
+return
+
+}
+
+let emp = employees[currentEmployee]
+
+table.innerHTML=""
+
+emp.days.forEach((d,i)=>{
+
+table.innerHTML+=`
+
+<tr>
+
+<td>${d.date}</td>
+
+<td>${d.kra}%</td>
+
+<td>₹${d.pay}</td>
+
+<td>₹${d.incentive}</td>
+
+<td>₹${d.total}</td>
+
+<td>
+
+<button class="actionBtn" onclick="editDay(${i})">Edit</button>
+
+<button class="actionBtn" onclick="deleteDay(${i})">Delete</button>
+
+</td>
+
+</tr>`
+
+})
+
+gross.innerText = emp.total
+
+let t = Math.round(emp.total * .10)
+
+tds.innerText = t
+
+net.innerText = emp.total - t
+
+}
+
+function deleteDay(i){
+
+if(!confirm("Delete entry?")) return
+
+let emp = employees[currentEmployee]
+
+emp.total -= emp.days[i].total
+
+emp.days.splice(i,1)
+
+saveData()
+
+render()
+
+}
+
+function editDay(i){
+
+let emp = employees[currentEmployee]
+
+let d = emp.days[i]
+
+emp.total -= d.total
+
+emp.days.splice(i,1)
+
+output.innerHTML = `Editing ${d.date}. Recalculate & save again.`
+
+saveData()
+
+render()
+
+}
+
+function printReport(){
+
+setTimeout(function(){
+
+window.focus()
+
+window.print()
+
+},300)
+
+}
+
+</script></body>
+</html>
