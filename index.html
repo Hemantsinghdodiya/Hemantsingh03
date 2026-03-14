@@ -128,27 +128,38 @@ color:black
 }
 
 }
+    #loginScreen{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#ffffff;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:9999;
+}
+
+.loginCard{
+width:300px;
+text-align:center;
+}
 
 </style></head><body>
-    <script>
-const allowedKeys = [
-"HEMANT03",
-"ABHIRAJ29",
-"TEAM789"
-];
+    <body>
 
-let savedKey = localStorage.getItem("accessKey");
+<div id="loginScreen">
+  <div class="card loginCard">
+    <h2>PW KRA Tracker Login</h2>
 
-if(!allowedKeys.includes(savedKey)){
-   let key = prompt("Enter Access Key");
+    <input type="password" id="accessInput" placeholder="Enter Access Key">
 
-   if(allowedKeys.includes(key)){
-      localStorage.setItem("accessKey", key);
-   }else{
-      document.body.innerHTML = "<h2 style='text-align:center;margin-top:100px'>Access Denied</h2>";
-   }
-}
-</script>
+    <button onclick="checkKey()">Login</button>
+
+    <p id="errorMsg" class="red"></p>
+  </div>
+</div>
     <div class="card"><h2>Employee Manager</h2><select id="employeeSelect">
 <option value="">Select Employee</option>
 </select><input id="newEmployee" placeholder="New Employee Name"><button onclick="addEmployee()">Add Employee</button>
@@ -165,6 +176,38 @@ if(!allowedKeys.includes(savedKey)){
 <th>Incentive ₹</th>
 <th>Total ₹</th>
 <th>Action</th></tr></thead><tbody id="table"></tbody></table><h3>Total Salary: ₹<span id="gross">0</span></h3><h3 class="red">TDS: ₹<span id="tds">0</span></h3><h2 class="green">In-Hand: ₹<span id="net">0</span></h2></div><script>
+    const allowedKeys = [
+"hemant03",
+"abhiraj29",
+"TEAM789"
+];
+
+let savedKey = localStorage.getItem("accessKey");
+
+function unlockSite(){
+document.getElementById("loginScreen").style.display="none";
+}
+
+if(allowedKeys.includes(savedKey)){
+unlockSite();
+}
+
+function checkKey(){
+
+let key = document.getElementById("accessInput").value;
+
+if(allowedKeys.includes(key)){
+
+localStorage.setItem("accessKey",key);
+unlockSite();
+
+}else{
+
+document.getElementById("errorMsg").innerText="Wrong Access Key";
+
+}
+
+}
 
 let employees = JSON.parse(localStorage.getItem("pwEmployees")) || {}
 
